@@ -89,13 +89,13 @@
   /* ---- held-in-hand lighting ---- */
   /* soft backlight: a warm glow sitting behind the card so its silhouette lifts off the page */
   .backlight{position:absolute;left:50%;top:50%;width:1300px;height:860px;pointer-events:none;
-    transform:translate(-50%,-50%) translateZ(-420px);
+    transform:translate(-50%,-50%) translateZ(-800px);
     background:radial-gradient(closest-side,rgba(255,252,246,.95),rgba(255,252,246,.45) 45%,rgba(255,252,246,0));
     opacity:.8;will-change:transform,opacity;}
   /* cast shadow on the surface behind the card; moves and foreshortens with the tilt */
   .cast{position:absolute;left:0;top:0;width:756px;height:432px;pointer-events:none;border-radius:10px;
-    background:rgba(24,28,38,.34);filter:blur(34px);
-    transform:translateZ(-160px);will-change:transform,opacity;}
+    background:rgba(24,28,38,.34);filter:blur(42px);
+    transform:translateZ(-600px);will-change:transform,opacity;}
   /* printed-ink relief, paper tooth, edge catch-light, moving glint */
   .grain{position:absolute;inset:0;pointer-events:none;background-size:180px 180px;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");}
@@ -109,6 +109,7 @@
     will-change:transform,opacity;}
   .back .glint{mix-blend-mode:screen;}
   @media (prefers-reduced-motion:reduce){.glint{display:none;}}
+  .sheen{display:none;} /* straight streak retired: it drew a hard diagonal edge; the soft glint replaces it */
 
   .ground{position:absolute;left:50%;top:50%;width:700px;height:130px;display:none;
     background:radial-gradient(50% 50% at 50% 50%,rgba(30,34,44,.34),rgba(30,34,44,0) 70%);
@@ -461,19 +462,20 @@
     ground.style.opacity=(0.22+0.55*Math.abs(nz)).toFixed(3);
     /* cast shadow: key light sits up-left in front, so the shadow falls down-right and
        foreshortens as the card turns edge-on */
-    var cx=Math.max(0.06,Math.abs(Math.cos(Y))), cy=Math.max(0.06,Math.abs(Math.cos(X)));
-    var ox=26+nx*64, oy=64-ny*64;
-    cast.style.transform='translate3d('+ox.toFixed(1)+'px,'+oy.toFixed(1)+'px,-160px) scale('+(cx*0.94).toFixed(3)+','+(cy*0.9).toFixed(3)+')';
-    cast.style.opacity=(0.5+0.5*Math.abs(nz)).toFixed(3);
+    var cx=Math.max(0.3,Math.abs(Math.cos(Y))), cy=Math.max(0.3,Math.abs(Math.cos(X)));
+    var K=(2200+600)/2200;  /* undo perspective shrink at that depth */
+    var ox=(26+nx*64)*K, oy=(64-ny*64)*K;
+    cast.style.transform='translate3d('+ox.toFixed(1)+'px,'+oy.toFixed(1)+'px,-600px) scale('+(cx*0.94*K).toFixed(3)+','+(cy*0.9*K).toFixed(3)+')';
+    cast.style.opacity=Math.pow(Math.abs(nz),1.4).toFixed(3);
     /* backlight drifts slightly against the shadow and brightens when the card faces you */
-    backlight.style.transform='translate(-50%,-50%) translate3d('+(-nx*60).toFixed(1)+'px,'+(ny*40).toFixed(1)+'px,-420px)';
+    backlight.style.transform='translate(-50%,-50%) translate3d('+(-nx*80).toFixed(1)+'px,'+(ny*55).toFixed(1)+'px,-800px) scale(1.2)';
     backlight.style.opacity=(0.62+0.3*Math.abs(nz)).toFixed(3);
     /* glint: a soft specular spot that slides across the stock as you tilt */
     var gx=(-nx*42-10), gy=(ny*42-14);
     glintF.style.transform='translate('+gx.toFixed(1)+'%,'+gy.toFixed(1)+'%)';
     glintB.style.transform='translate('+(-gx).toFixed(1)+'%,'+gy.toFixed(1)+'%)';
-    glintF.style.opacity=(0.30*lf*lf).toFixed(3);
-    glintB.style.opacity=(0.22*lb*lb).toFixed(3);
+    glintF.style.opacity=(0.38*lf*lf).toFixed(3);
+    glintB.style.opacity=(0.26*lb*lb).toFixed(3);
   }
   function tick(){
     if(!dragging){
