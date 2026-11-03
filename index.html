@@ -197,7 +197,7 @@
       "worksFor": { "@id": "https://www.carmelcapitalpartners.com/#organization" },
       "address": {
         "@type": "PostalAddress",
-        "streetAddress": "1230 Park Ave West, #226",
+        "streetAddress": "1849 Green Bay Rd, Ste 109",
         "addressLocality": "Highland Park",
         "addressRegion": "IL",
         "postalCode": "60035",
@@ -215,7 +215,7 @@
       "employee": { "@id": "https://mycard.kevinsilverman.com/#kevin" },
       "address": {
         "@type": "PostalAddress",
-        "streetAddress": "1230 Park Ave West, #226",
+        "streetAddress": "1849 Green Bay Rd, Ste 109",
         "addressLocality": "Highland Park",
         "addressRegion": "IL",
         "postalCode": "60035",
@@ -234,7 +234,7 @@
   <ul>
     <li><a href="tel:+13129530992">+1 312-953-0992</a></li>
     <li><a href="mailto:kevins@carmelcap.com">kevins@carmelcap.com</a></li>
-    <li><address>1230 Park Ave West, #226, Highland Park, IL 60035</address></li>
+    <li><address>1849 Green Bay Rd, Ste 109, Highland Park, IL 60035</address></li>
     <li><a href="https://www.carmelcapitalpartners.com/" rel="me">www.carmelcapitalpartners.com</a></li>
   </ul>
 </div>
@@ -270,7 +270,7 @@
             <g font-size="5.55" font-weight="400" style="font-variant-numeric:oldstyle-nums;font-feature-settings:'onum' 1">
               <text class="fit" data-cap="3.72" x="138.3" y="51.95" textLength="36.8" lengthAdjust="spacing">+312-953-0992</text>
               <text class="fit" data-cap="3.72" x="138.1" y="65.30" textLength="69.0" lengthAdjust="spacing">KEVINS@CARMELCAP.COM</text>
-              <text class="fit" data-cap="3.72" x="138.0" y="78.65" textLength="69.6" lengthAdjust="spacing">1230 PARK AVE WEST, #226</text>
+              <text class="fit" data-cap="3.72" x="138.0" y="78.65" textLength="73.1" lengthAdjust="spacing">1849 GREEN BAY RD, STE 109</text>
               <text class="fit" data-cap="3.72" x="137.9" y="87.41" textLength="68.3" lengthAdjust="spacing">HIGHLAND PARK, IL 60035</text>
               <text class="fit" data-cap="3.72" x="137.6" y="98.55" textLength="100.6" lengthAdjust="spacing">WWW.CARMELCAPITALPARTNERS.COM</text>
             </g>
@@ -508,6 +508,31 @@
   function toggleQR(){ qrOn=!qrOn; qrEl.setAttribute("opacity", qrOn?"1":"0");
     var pdfName = qrOn ? "kevin-silverman-card-qr.pdf" : "kevin-silverman-card.pdf";
     pdfEl.setAttribute("href", pdfName); pdfEl.setAttribute("download", pdfName); }
+  /* ---- Save PDF: open the phone's share sheet (Save to Files, AirDrop, Messages, Mail,
+          Quick Share on Android) instead of opening the PDF in a page with no way back.
+          Desktop browsers, or phones without file sharing, just download the file. ---- */
+  var pdfFiles={};
+  function preloadPDF(name){
+    if(!window.fetch || pdfFiles[name]) return;
+    fetch(name).then(function(r){ return r.ok ? r.blob() : null; }).then(function(b){
+      if(b){ try{ pdfFiles[name]=new File([b], name, {type:"application/pdf"}); }catch(e){} }
+    }).catch(function(){});
+  }
+  preloadPDF("kevin-silverman-card.pdf"); preloadPDF("kevin-silverman-card-qr.pdf");
+  function downloadFile(f){
+    var u=URL.createObjectURL(f), a=document.createElement("a");
+    a.href=u; a.download=f.name; document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(u); a.remove(); }, 4000);
+  }
+  pdfEl.addEventListener("click", function(e){
+    var name=pdfEl.getAttribute("download")||"kevin-silverman-card.pdf", f=pdfFiles[name];
+    if(!f){ preloadPDF(name); return; }               /* not loaded yet: fall back to the plain link */
+    e.preventDefault();
+    var data={files:[f], title:"Kevin E. Silverman, CFA \u2014 business card"};
+    if(navigator.canShare && navigator.canShare(data)){
+      navigator.share(data).catch(function(err){ if(err && err.name!=="AbortError") downloadFile(f); });
+    } else { downloadFile(f); }
+  });
   function end(e){
     if(dragging && !moved && e && Date.now()-downT < 400){ toggleQR(); touched=false; vx=0; vy=0; }
     dragging=false; stage.classList.remove("dragging");
